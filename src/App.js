@@ -4,6 +4,10 @@ import ProductCard from './ProductCard';
 // import data from './products.json';
 
 const App = () => {
+
+  // const URL = 'http://localhost:5000/'
+  const URL = 'https://5745-2405-201-800b-1b7c-6509-887d-75fb-68c7.ngrok-free.app/'
+
   const [products, setProducts] = useState([]); // Start with null to indicate loading
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -18,55 +22,108 @@ const App = () => {
 
   const processProducts = (data) => {
     // Clean price and discountedPrice by removing ₹ symbol, handling missing discountedPrice, and sorting by discountedPrice
-    const cleanedProducts = data.map((product) => {
-      const cleanPrice = (product.price) ? product.price.replace('₹', '').trim() : '';
-      let cleanDiscountedPrice = (product.discountedPrice) ? product.discountedPrice.replace('₹', '').trim() : '';
+    // const cleanedProducts = data.map((product) => {
+    //   const cleanPrice = (product.price) ? product.price.replace('₹', '').trim() : '';
+    //   let cleanDiscountedPrice = (product.discountedPrice) ? product.discountedPrice.replace('₹', '').trim() : '';
 
-      // If discountedPrice is missing or empty, assign price to discountedPrice
-      if (!cleanDiscountedPrice) {
-        cleanDiscountedPrice = cleanPrice;
-      }
+    //   // If discountedPrice is missing or empty, assign price to discountedPrice
+    //   // if (!cleanDiscountedPrice) {
+    //   //   cleanDiscountedPrice = cleanPrice;
+    //   // }
 
-      return {
-        ...product,
-        price: cleanPrice,
-        discountedPrice: cleanDiscountedPrice
-      };
-    });
+    //   return {
+    //     ...product,
+    //     price: cleanPrice,
+    //     discountedPrice: cleanDiscountedPrice
+    //   };
+    // });
 
     // Sort products by discountedPrice (assuming it's a number in the JSON)
     // const sortedProducts = cleanedProducts.sort((a, b) => parseInt(a.discountedPrice) - parseInt(b.discountedPrice));
 
     setloading(false)
-    setProducts(cleanedProducts); // Update state with processed data
+    // setProducts([...products,...cleanedProducts]); // Update state with processed data
+    // setProducts([...products,...data]); // Update state with processed data
+    setProducts((prevProducts) => [...prevProducts, ...data]);
+    // console.log({products})
   };
 
-  const handleSearch = () => {
+  const handleSearch = async () => {
+    setProducts([])
     setloading(true)
     console.log('Search started')
-    axios.post(`http://localhost:5000/scrape/`, {
-        "query": searchTerm,
-        "scpMTRA": true, 
-        "scpAMZN": true,
-        "scpFLPKT": true,
+
+    axios.post(`${URL}scrape/`, {
+        query: searchTerm,        
+        site: "scpAMZN"
     }, {
       headers: {
           'Content-Type': 'application/json', 
       }
     }).then((result)=>{
-        console.log(result.data)
+        console.log({amazon: result.data})
+        console.log('Amazon scraped')
         processProducts(result.data.message)
     }).catch(err => {
         console.log({err})
     });
-    // const filtered = products.filter(product =>
-    //   product.productTitle.toLowerCase().includes(searchTerm.toLowerCase())
-    // );
-    // setFilteredProducts(filtered);
+
+    axios.post(`${URL}scrape/`, {
+        query: searchTerm,        
+        site: "scpFLPKT"
+    }, {
+      headers: {
+          'Content-Type': 'application/json', 
+      }
+    }).then((result)=>{
+        console.log({flipkart: result.data})
+        console.log('Flipkart scraped')
+        processProducts(result.data.message)
+    }).catch(err => {
+        console.log({err})
+    });
+
+    axios.post(`${URL}scrape/`, {
+        query: searchTerm,        
+        site: "scpMTRA"
+    }, {
+      headers: {
+          'Content-Type': 'application/json', 
+      }
+    }).then((result)=>{
+        console.log({myntra: result.data})
+        console.log('Myntra scraped')
+        processProducts(result.data.message)
+    }).catch(err => {
+        console.log({err})
+    });
+
+    axios.post(`${URL}scrape/`, {
+      query: searchTerm,        
+      site: "scpAJIO"
+    }, {
+      headers: {
+          'Content-Type': 'application/json', 
+      }
+    }).then((result)=>{
+        console.log({ajio: result.data})
+        console.log('AJIO scraped')
+        processProducts(result.data.message)
+    }).catch(err => {
+        console.log({err})
+    });
+
   };
 
-  const handleFilter = () => {
-    const sortedProducts = products.sort((a, b) => parseInt(a.discountedPrice.replace('₹', '').replace(',', '').trim()) - parseInt(b.discountedPrice.replace('₹', '').replace(',', '').trim()));
+  const handleSort = (by) => {
+    let sortedProducts = []
+    if (by === 'price') {      
+      sortedProducts = [...products].sort((a, b) => parseFloat(a.discountedPrice) - parseFloat(b.discountedPrice));
+    } else if (by === 'rating') {
+      sortedProducts = [...products].sort((a, b) => parseFloat(b.rating) - parseFloat(a.rating));
+    }  else if (by === 'ratingCount') {
+      sortedProducts = [...products].sort((a, b) => parseFloat(b.ratingCount) - parseFloat(a.ratingCount));
+    } 
     console.log({sortedProducts})
     setProducts(sortedProducts)
   }
@@ -95,15 +152,27 @@ const App = () => {
           Search
         </button>
         <button
-          onClick={handleFilter}
+          onClick={() => handleSort('price')}
           className="ml-2 bg-gray-900 text-white px-4 py-2 rounded-md hover:bg-gray-600 flex"
         >
-          By Price <svg className='ml-5' xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-up"><path d="m18 15-6-6-6 6"/></svg>
+          Price
+        </button>
+        <button
+          onClick={() => handleSort('rating')}
+          className="ml-2 bg-gray-900 text-white px-4 py-2 rounded-md hover:bg-gray-600 flex"
+        >
+          Rating
+        </button>
+        <button
+          onClick={() => handleSort('ratingCount')}
+          className="ml-2 bg-gray-900 text-white px-4 py-2 rounded-md hover:bg-gray-600 flex"
+        >
+          Rating Count
         </button>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-10 mx-20">
         { !loading ? products.map((product, index) => (
-          <ProductCard key={index} product={product} />
+          (product.imageUrl != '') ? <ProductCard key={index} product={product} /> : ''
         )) : 'Loading Results...'}
       </div>
     </div>

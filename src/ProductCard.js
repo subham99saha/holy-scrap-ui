@@ -2,11 +2,13 @@ import React from 'react';
 
 const ProductCard = ({ product }) => {
     const productSource = (product.itemLink) ? product.itemLink.includes('myntra')
-        ? 'MYNTRA'
+        ? 'myntra.png'
         : product.itemLink.includes('amazon')
-        ? 'AMAZON'
+        ? 'amazon.jpg'
         : product.itemLink.includes('flipkart')
-        ? 'FLIPKART'
+        ? 'flipkart.png'
+        : product.itemLink.includes('ajio')
+        ? 'ajio.webp'
         : 'Other'
     : ''
     ;
@@ -29,26 +31,21 @@ const ProductCard = ({ product }) => {
             : <span className='text-xs text-gray-600'>Sponsored</span>}</a>
         </div>
         <div className=''>
-            <p className="text-xs text-gray-600 font-semibold mb-2">
-            {product.discountedPrice && (
+            <p className="text-sm text-gray-600 font-semibold mb-2">
+            {parseFloat(product.discountedPrice) != 0 && (
             <span className='mr-3'>Rs. {product.discountedPrice}</span>
             )}
-            {product.price && (
+            {parseFloat(product.price) != 0 && (
                 <span className='font-light'><s>Rs. {product.price}</s></span>
             )}
             </p>
-            {product.rating && (
-            <p className="text-xs font-bold mb-2">{product.rating} <span className='text-yellow-400'>⭐</span> {product.ratingCount ? `(${product.ratingCount})` : ''}</p>
+            {parseFloat(product.rating) != 0 && (
+            <p className="text-xs font-bold mb-2">{product.rating} <span className='text-yellow-400'>⭐</span> {parseFloat(product.ratingCount) != 0 ? `(${product.ratingCount})` : ''}</p>
             )}
-            <p className="text-gray-700 font-bold mb-2">{productSource}</p> {/* Display product source */}
-            {/* <a
-            href={product.itemLink}
-            className="text-blue-500 hover:text-blue-700"
-            target="_blank"  // Opens the link in a new tab
-            rel="noopener noreferrer"  // Security measure for external links
-            >
-            View Product
-            </a> */}
+            {/* <p className="text-gray-700 font-bold mb-2">{productSource}</p> Display product source */}
+        </div>
+        <div className="mt-3">
+          <img src={`${process.env.PUBLIC_URL}/images/logos/${productSource}`} class="h-10 w-10" />
         </div>
       </div>
     </div>
